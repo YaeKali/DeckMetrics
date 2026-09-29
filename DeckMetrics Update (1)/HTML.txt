@@ -1,0 +1,198 @@
+<body>
+
+<header class="topbar">
+  <h1>DeckMetrics</h1>
+  <div class="tagline">private MTG deck ledger — live prices from Scryfall</div>
+  <div class="spacer"></div>
+  <div class="rate-note" id="netStatus"><span class="dot"></span> connected</div>
+</header>
+
+<div class="layout">
+
+  <section class="pane pane-decks">
+    <div class="preview-rail" id="previewRail">
+      <div class="preview-rail-img-wrap">
+        <img class="preview-rail-img" id="previewRailImg" src="" alt="">
+        <div class="preview-rail-placeholder" id="previewRailPlaceholder">Hover a card to preview it here</div>
+      </div>
+      <div class="preview-rail-price" id="previewRailPrice"></div>
+      <div class="preview-rail-name" id="previewRailName"></div>
+    </div>
+    <div class="pane-head"><h2>Decks</h2></div>
+    <div class="deck-list" id="deckList"></div>
+    <div class="deck-actions-row">
+      <button class="primary" id="newDeckBtn" style="width:100%">+ New deck</button>
+    </div>
+  </section>
+
+  <section class="pane pane-search">
+    <div class="pane-head">
+      <h2>Add cards</h2>
+      <div class="view-toggles">
+        <button id="viewListBtn" class="active" title="List View">≡</button>
+        <button id="viewGridBtn" title="Grid View">⊞</button>
+      </div>
+    </div>
+    
+    <div class="search-box">
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search a card name…" autocomplete="off">
+        <button class="search-clear" id="searchClear" aria-label="Clear search">✕</button>
+      </div>
+    </div>
+
+    <!-- New Filter Pills -->
+    <div class="search-filters" id="searchFilters">
+      <button class="filter-pill" data-type="creature">Creature</button>
+      <button class="filter-pill" data-type="instant">Instant</button>
+      <button class="filter-pill" data-type="sorcery">Sorcery</button>
+      <button class="filter-pill" data-type="artifact">Artifact</button>
+      <button class="filter-pill" data-type="enchantment">Enchantment</button>
+      <button class="filter-pill" data-type="land">Land</button>
+    </div>
+
+    <div class="results" id="searchResults">
+      <!-- New Dashboard Empty State -->
+      <div class="search-dashboard" id="searchDashboard">
+        <div class="dashboard-title">Format Staples</div>
+        <div class="quick-add-grid">
+          <button class="quick-add-btn" data-exact="Sol Ring"><span class="color-dot dot-c"></span> Sol Ring</button>
+          <button class="quick-add-btn" data-exact="Arcane Signet"><span class="color-dot dot-c"></span> Arcane Signet</button>
+          <button class="quick-add-btn" data-exact="Command Tower"><span class="color-dot dot-c"></span> Command Tower</button>
+        </div>
+        <div class="empty-hint" style="padding: 24px 0 0 0;">
+          Type a card name above, use the type filters, or click a staple to add it directly.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane pane-deck">
+    <div id="deckEditorEmpty" class="empty-deck" style="margin:auto;">
+      <div class="glyph">✦</div>
+      <div>Select or create a deck to begin.</div>
+    </div>
+    <div id="deckEditor" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+      <div class="deck-header">
+        <div class="row1">
+          <div class="deck-title" id="deckTitle">—</div>
+          <div class="deck-total" id="deckTotal">$0.00</div>
+        </div>
+        <div class="deck-sub">
+          <div class="deck-count" id="deckCount">0 cards</div>
+          <div class="refresh-row">
+            <span id="lastUpdated">never priced</span>
+            <button class="icon" id="refreshBtn">Refresh prices</button>
+          </div>
+        </div>
+      </div>
+<!-- Analytics Panel -->
+      <div id="analyticsPanel" style="display:none; padding:16px 20px; background:var(--surface-2); border-bottom:1px solid var(--border); gap:20px; flex-wrap:wrap;">
+        <!-- Mana Curve Chart -->
+        <div style="flex:1; min-width:200px;">
+          <div style="font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Mana Curve</div>
+          <div id="manaCurveChart" style="display:flex; align-items:flex-end; gap:4px; height:80px; border-bottom:1px solid var(--border); padding-bottom:4px;">
+            <!-- Bars injected here -->
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted); padding-top:4px;">
+            <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6+</span>
+          </div>
+        </div>
+      
+        <!-- Color Devotion & Top Cost -->
+        <div style="flex:1; min-width:200px;">
+          <div style="font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Mana Devotion (Pips)</div>
+          <div id="colorBar" style="display:flex; height:24px; border-radius:3px; overflow:hidden; background:var(--surface-3);">
+            <!-- Stacked segments injected here -->
+          </div>
+          
+          <div style="margin-top:12px;">
+            <div style="font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:4px;">Top Value Cards</div>
+            <div id="topValueList" style="font-size:12px; color:var(--ink-dim); display:flex; flex-direction:column; gap:2px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="deck-body" id="deckBody"></div>
+      <div class="stats-bar" id="statsBar"></div>
+      <div class="footer-actions">
+        <button id="renameBtn">Rename</button>
+        <button id="playtestBtn" class="primary">Playtest deck</button>
+        <button id="importTextOpenBtn">Import Text</button>
+        <button id="exportBtn">Export JSON</button>
+        <button id="importBtn">Import JSON</button>
+        <button id="exportTxtBtn">Download .txt</button>
+        <button id="copyTxtBtn">Copy list</button>
+        <button id="printBtn">Print / Save PDF</button>
+        <div class="spacer"></div>
+        <button id="deleteDeckBtn" style="border-color:var(--danger); color:var(--danger);">Delete deck</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="printArea"></div>
+
+<div class="toast" id="toast"></div>
+
+<dialog id="promptDialog">
+  <div class="dialog-inner">
+    <h3 id="promptTitle">New deck</h3>
+    <input type="text" id="promptInput" placeholder="Deck name">
+    <div class="dialog-actions">
+      <button id="promptCancel">Cancel</button>
+      <button class="primary" id="promptOk">Save</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="importTextDialog">
+  <div class="dialog-inner" style="width: min(480px, 90vw);">
+    <h3>Import Deck from Text</h3>
+    <p style="font-size:12px; color:var(--muted); margin-top:-6px;">Paste your decklist (e.g. "4 Lightning Bolt"). This will create a new deck.</p>
+    <textarea id="importTextInput" rows="12" placeholder="1 Sol Ring&#10;4 Brainstorm&#10;1x Black Lotus"></textarea>
+    <div class="dialog-actions">
+      <button id="importTextCancel">Cancel</button>
+      <button class="primary" id="importTextOk">Import</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="playtestDialog" style="width: min(1000px, 95vw); max-height: 90vh;">
+  <div class="dialog-inner" style="display:flex; flex-direction:column; height: 80vh;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3>Playtest: <span id="ptDeckName"></span></h3>
+      <button class="preview-close" id="ptClose" style="position:static;">✕</button>
+    </div>
+    <div class="pt-controls" style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+      <button id="ptDraw7" class="primary">New Hand (Draw 7)</button>
+      <button id="ptDraw1">Draw 1</button>
+      <span id="ptDeckCount" style="margin-left:auto; font-size:13px; color:var(--muted);"></span>
+    </div>
+    <div id="ptHand" style="flex:1; display:flex; gap:12px; overflow-x:auto; padding:16px; background:var(--surface-3); border-radius:var(--radius); align-items:center; min-height:300px; margin-top:8px;">
+    </div>
+  </div>
+</dialog>
+
+<dialog id="cardPreviewDialog">
+  <div class="preview-inner">
+    <button class="preview-close" id="previewClose" aria-label="Close">✕</button>
+    <img class="preview-img" id="previewImg" src="" alt="">
+    <div class="preview-details">
+      <div class="preview-name" id="previewName"></div>
+      <div class="preview-cost" id="previewCost"></div>
+      <div class="preview-type" id="previewType"></div>
+      <div class="preview-text" id="previewText"></div>
+      <div class="preview-pt" id="previewPT"></div>
+      <div class="preview-price" id="previewPrice"></div>
+      <div class="preview-actions">
+        <button class="primary" id="previewAddBtn">Add to deck</button>
+        <button id="previewCoverBtn">Set as deck cover</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<input type="file" id="importFile" accept="application/json" style="display:none">
+
